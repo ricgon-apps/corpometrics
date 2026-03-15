@@ -365,28 +365,29 @@ async function syncFromSheets() {
   return false;
 }
 
-async function saveEntry(entry) {
-  // optimistic update
+function saveEntry(entry) {
+  // Guarda localmente de imediato (síncrono)
   const existing = entries.findIndex(e => e.date === entry.date);
   if (existing >= 0) entries[existing] = entry;
   else entries.push(entry);
   cacheEntries(entries);
 
-  const res = await apiCall({ action: "save", ...entry });
-  if (res && res.ok) {
-    showToast("✓ Guardado no Google Sheets!");
-  } else {
-    showToast("⚠️ Guardado localmente (sem ligação)");
-  }
+  // Sincroniza com Google Sheets em background (não bloqueia UI)
+  apiCall({ action: "save", ...entry }).then(res => {
+    if (res && res.ok) {
+      showToast("✓ Sincronizado com Google Sheets");
+    } else {
+      showToast("⚠️ Sem ligação — guardado localmente");
+    }
+  });
 }
 
-async function deleteEntry(date) {
+function deleteEntry(date) {
   entries = entries.filter(e => e.date !== date);
   cacheEntries(entries);
-
-  const res = await apiCall({ action: "delete", date });
-  if (res && res.ok) showToast("Apagado");
-  else showToast("⚠️ Apagado localmente");
+  showToast("Medição apagada");
+  // Sincroniza com Sheets em background
+  apiCall({ action: "delete", date });
 }
 
 // ── VIEWS ─────────────────────────────────────────────────────────────────────
@@ -637,7 +638,7 @@ function renderAdd() {
     </div>`;
 }
 
-async function submitForm() {
+function submitForm() {
   const date   = document.getElementById("f-date").value;
   const weight = parseNum(document.getElementById("f-weight").value);
   const fat    = parseNum(document.getElementById("f-fat").value);
@@ -648,15 +649,9 @@ async function submitForm() {
     showToast("⚠️ Preencha todos os campos"); return;
   }
 
-  // Desativa botão imediatamente para evitar duplo clique
-  const btn = document.getElementById("btn-save");
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = "⟳ A guardar...";
-    btn.style.opacity = "0.7";
-  }
-
-  await saveEntry({ date, weight, fat, tbw, mus });
+  // Guarda localmente e navega imediatamente — sem esperar pelo Sheets
+  saveEntry({ date, weight, fat, tbw, mus });
+  showToast("✓ Medição guardada!");
   editDate = null;
   switchView("dash");
 }
