@@ -629,7 +629,7 @@ function renderAdd() {
         <div class="field"><label>Água % (TBW)</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-tbw" placeholder="ex: 53.6" value="${f.tbw}"/></div>
         <div class="field"><label>Músculo %</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-mus" placeholder="ex: 30.0" value="${f.mus}"/></div>
       </div>
-      <button class="btn-primary" onclick="submitForm()">${editDate ? "Guardar alterações" : "Guardar medição"}</button>
+      <button id="btn-save" class="btn-primary" onclick="submitForm()">${editDate ? "Guardar alterações" : "Guardar medição"}</button>
       <button class="btn-ghost" onclick="cancelAdd()">Cancelar</button>
       <div style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.8">
         Aceita <strong style="color:var(--text)">.</strong> ou <strong style="color:var(--text)">,</strong> como decimal.
@@ -646,6 +646,14 @@ async function submitForm() {
 
   if (!date || isNaN(weight) || isNaN(fat) || isNaN(tbw) || isNaN(mus)) {
     showToast("⚠️ Preencha todos os campos"); return;
+  }
+
+  // Desativa botão imediatamente para evitar duplo clique
+  const btn = document.getElementById("btn-save");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "⟳ A guardar...";
+    btn.style.opacity = "0.7";
   }
 
   await saveEntry({ date, weight, fat, tbw, mus });
