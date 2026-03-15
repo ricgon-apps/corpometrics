@@ -284,11 +284,9 @@ const parseNum = v  => parseFloat(String(v).replace(",","."));
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const fmtDate = val => {
   if (!val) return "—";
-  const s = normalizeForSort(val);
+  const s = toYMD(val);
   if (!s || s.length < 10) return String(val);
-  const parts = s.split("-");
-  if (parts.length !== 3) return s;
-  const [y, m, d] = parts;
+  const [y, m, d] = s.split("-");
   return `${d}/${MONTHS[parseInt(m,10)-1]}/${y}`;
 };
 const delta    = (a,b) => b==null ? null : { v: Math.abs(a-b).toFixed(1), dir: a<b?"down":a>b?"up":"flat" };
@@ -320,24 +318,29 @@ function showToast(msg, dur=2400) {
   setTimeout(() => t.classList.remove("show"), dur);
 }
 
-function normalizeForSort(val) {
+// Converte QUALQUER formato de data para "YYYY-MM-DD"
+function toYMD(val) {
   if (!val) return "";
-  if (typeof val === "object" || (typeof val === "string" && (val.includes("GMT") || val.includes("T")))) {
-    const d = new Date(val);
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth()+1).padStart(2,"0");
-    const day = String(d.getUTCDate()).padStart(2,"0");
-    return y + "-" + m + "-" + day;
-  }
-  return String(val).trim().substring(0,10);
+  const s = String(val).trim();
+  // Já está no formato correto
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Tem hora ou timezone — pega só os primeiros 10 chars
+  if (/^\d{4}-\d{2}-\d{2}[T ]/.test(s)) return s.substring(0, 10);
+  // Formato "Wed Mar 11 2026 ..." ou similar — parse com Date mas usar UTC
+  try {
+    const d = new Date(s);
+    if (!isNaN(d)) {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth()+1).padStart(2,"0");
+      const day = String(d.getUTCDate()).padStart(2,"0");
+      return y + "-" + m + "-" + day;
+    }
+  } catch(e) {}
+  return s.substring(0, 10);
 }
 
 function sorted() {
-  return [...entries].sort((a,b) => {
-    const da = normalizeForSort(a.date);
-    const db = normalizeForSort(b.date);
-    return da.localeCompare(db);
-  });
+  return [...entries].sort((a,b) => toYMD(a.date).localeCompare(toYMD(b.date)));
 }
 
 // ── PERSISTENCE (cache + sheets) ─────────────────────────────────────────────
@@ -366,7 +369,8 @@ async function syncFromSheets() {
   document.getElementById("sync-status").textContent = "⟳ a sincronizar...";
   const res = await apiCall({ action: "getAll" });
   if (res && res.ok) {
-    entries = res.entries;
+    // Normaliza todas as datas para YYYY-MM-DD ao carregar do Sheets
+    entries = res.entries.map(e => ({ ...e, date: toYMD(e.date) }));
     cacheEntries(entries);
     document.getElementById("sync-status").textContent = "✓ sincronizado";
     setTimeout(() => document.getElementById("sync-status").textContent = "", 2000);
