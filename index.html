@@ -175,6 +175,7 @@ body {
 /* ── SPARKLINE GRID ── */
 .spark-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .spark-label { font-size:10px; color:var(--muted); letter-spacing:0.09em; text-transform:uppercase; margin-bottom:8px; }
+.spark-chart { height:44px; overflow:hidden; }
 .spark-vals  { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:5px; }
 .spark-dates { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:2px; }
 
@@ -589,7 +590,7 @@ function renderDash() {
     ].forEach(({label,data,c}) => {
       html += `<div>
         <div class="spark-label">${label}</div>
-        ${sparklineSVG(data, c, 160, 44)}
+        <div class="spark-chart">${sparklineSVG(data, c, 160, 44)}</div>
         <div class="spark-vals"><span>${fmt(data[0])}</span><strong style="color:var(--text)">${fmt(data[data.length-1])}</strong></div>
         <div class="spark-dates"><span>${fmtDate(s[0].date)}</span><span>${fmtDate(s[s.length-1].date)}</span></div>
       </div>`;
@@ -746,7 +747,7 @@ function sparklineSVG(data, color, w=160, h=44) {
   const line = pts.map(p=>p.join(",")).join(" ");
   const area = `${pts[0].join(",")} ${pts.slice(1).map(p=>p.join(",")).join(" ")} ${pts[pts.length-1][0]},${h} ${px},${h}`;
   const gid  = `sg${color.replace(/[^a-f0-9]/gi,"")}`;
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:hidden;display:block;width:100%">
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible;display:block;width:100%">
     <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
