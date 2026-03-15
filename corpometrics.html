@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Corpometrics"/>
+<meta name="theme-color" content="#090d12"/>
+<title>Corpometrics</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+  --bg:      #090d12;
+  --surf:    #111720;
+  --surf2:   #172030;
+  --border:  #1c2b3a;
+  --accent:  #34e8a8;
+  --gold:    #f5c842;
+  --red:     #f56c6c;
+  --blue:    #3b9ef7;
+  --muted:   #4e6678;
+  --text:    #ddeeff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding-bottom: calc(70px + var(--safe-bot));
+  overflow-x: hidden;
+}
+
+/* ── NAV BAR ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--surf);
+  border-bottom: 1px solid var(--border);
+  padding: calc(14px + var(--safe-top)) 20px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.logo { font-family:'DM Serif Display',serif; font-size:20px; color:var(--accent); }
+.logo em { color:var(--muted); font-style:italic; }
+
+/* ── BOTTOM TAB BAR ── */
+.tabs {
+  position: fixed; bottom:0; left:0; right:0; z-index:100;
+  background: var(--surf);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bot);
+}
+.tab {
+  flex:1; padding:12px 0 10px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:none; cursor:pointer;
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em;
+  text-transform:uppercase; color:var(--muted);
+  transition: color 0.15s;
+}
+.tab.active { color:var(--accent); }
+.tab-icon { font-size:20px; line-height:1; }
+
+/* ── CONTENT ── */
+.content { max-width:680px; margin:0 auto; padding:20px 16px; }
+
+/* ── CARDS ── */
+.card {
+  background:var(--surf); border:1px solid var(--border);
+  border-radius:14px; padding:20px; margin-bottom:16px;
+}
+.sec-label {
+  font-size:10px; letter-spacing:0.13em; color:var(--muted);
+  text-transform:uppercase; margin-bottom:12px; display:block;
+}
+
+/* ── SETUP SCREEN ── */
+.setup-card { text-align:center; padding:32px 24px; }
+.setup-card h2 { font-family:'DM Serif Display',serif; font-size:24px; color:var(--accent); margin-bottom:8px; }
+.setup-card p  { font-size:12px; color:var(--muted); line-height:1.8; margin-bottom:20px; }
+.setup-url-input {
+  width:100%; background:var(--surf2); border:1px solid var(--border);
+  border-radius:9px; padding:13px 14px; color:var(--text); font-size:14px;
+  font-family:'DM Mono',monospace; outline:none; margin-bottom:12px;
+}
+.btn-primary {
+  display:block; width:100%; padding:15px;
+  background:var(--accent); color:var(--bg);
+  border-radius:10px; border:none; font-size:13px;
+  letter-spacing:0.1em; text-transform:uppercase;
+  cursor:pointer; font-family:'DM Mono',monospace; font-weight:700;
+}
+.btn-ghost {
+  display:block; width:100%; padding:13px; margin-top:10px;
+  background:transparent; color:var(--muted);
+  border-radius:10px; border:1px solid var(--border); font-size:12px;
+  letter-spacing:0.1em; text-transform:uppercase;
+  cursor:pointer; font-family:'DM Mono',monospace;
+}
+
+/* ── FORM ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
+.field label {
+  display:block; font-size:10px; letter-spacing:0.12em;
+  color:var(--muted); text-transform:uppercase; margin-bottom:6px;
+}
+.field input {
+  width:100%; background:var(--surf2); border:1px solid var(--border);
+  border-radius:9px; padding:13px 14px; color:var(--text); font-size:16px;
+  font-family:'DM Mono',monospace; outline:none;
+  -webkit-appearance:none; appearance:none;
+}
+.field input:focus { border-color:var(--accent); }
+.field.full { grid-column:1/-1; }
+
+/* ── WEIGHT HERO ── */
+.weight-hero {
+  font-family:'DM Serif Display',serif;
+  font-size:64px; line-height:1; letter-spacing:-2px;
+  display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+}
+.weight-unit { font-size:24px; color:var(--muted); }
+.delta-badge { font-size:14px; padding:3px 8px; border-radius:6px; }
+.delta-good  { background:rgba(52,232,168,.15); color:var(--accent); }
+.delta-bad   { background:rgba(245,108,108,.15); color:var(--red); }
+.delta-flat  { background:rgba(78,102,120,.15);  color:var(--muted); }
+
+/* ── DERIVED KG GRID ── */
+.derived-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:14px; }
+.derived-item {
+  background:var(--surf2); border-radius:8px; padding:9px 10px;
+  border-top:2px solid;
+}
+.derived-val  { font-family:'DM Serif Display',serif; font-size:18px; }
+.derived-unit { font-size:10px; color:var(--muted); }
+.derived-lbl  { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; }
+
+/* ── COMPOSITION BARS ── */
+.comp-row { margin-bottom:12px; }
+.comp-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.comp-dot-label { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+.comp-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.comp-pct { font-family:'DM Serif Display',serif; font-size:17px; }
+.bar-wrap { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:2px; transition:width 0.8s ease; }
+.comp-ref { font-size:9px; color:var(--muted); margin-top:2px; }
+
+/* ── METRIC CARDS ── */
+.metric-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.metric-card {
+  background:var(--surf); border:1px solid var(--border);
+  border-radius:14px; padding:16px; border-top:3px solid;
+}
+.metric-icon { font-size:18px; margin-bottom:8px; }
+.metric-title { font-size:9px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:3px; }
+.metric-val   { font-family:'DM Serif Display',serif; font-size:30px; line-height:1; }
+.metric-unit  { font-size:12px; color:var(--muted); }
+.metric-kg    { font-size:11px; color:var(--muted); margin-top:3px; }
+.metric-ref   { font-size:10px; color:var(--muted); margin-top:3px; }
+.tag {
+  display:inline-block; padding:2px 7px; border-radius:4px;
+  font-size:9px; letter-spacing:0.08em; text-transform:uppercase;
+  font-weight:600; margin-top:6px;
+}
+
+/* ── SPARKLINE GRID ── */
+.spark-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.spark-label { font-size:10px; color:var(--muted); letter-spacing:0.09em; text-transform:uppercase; margin-bottom:8px; }
+.spark-vals  { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:5px; }
+.spark-dates { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-top:2px; }
+
+/* ── HISTORY TABLE ── */
+.hist-table { width:100%; border-collapse:collapse; font-size:12px; }
+.hist-table th {
+  font-size:9px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase;
+  padding:0 8px 10px 0; text-align:left; border-bottom:1px solid var(--border);
+}
+.hist-table td { padding:10px 8px 10px 0; border-bottom:1px solid var(--border); vertical-align:middle; }
+.hist-table tr:last-child td { border-bottom:none; }
+.date-cell { font-family:'DM Serif Display',serif; color:var(--gold); font-size:13px; }
+.act-btn {
+  padding:4px 9px; border-radius:6px; font-size:10px;
+  cursor:pointer; font-family:'DM Mono',monospace; background:transparent;
+}
+
+/* ── EVOLUTION SUMMARY ── */
+.evo-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.evo-item { text-align:center; }
+.evo-lbl  { font-size:9px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:5px; }
+.evo-val  { font-family:'DM Serif Display',serif; font-size:22px; line-height:1; }
+.evo-from { font-size:10px; color:var(--muted); margin-top:4px; }
+
+/* ── LOADING / TOAST ── */
+.toast {
+  position:fixed; bottom:calc(80px + var(--safe-bot)); left:50%;
+  transform:translateX(-50%);
+  background:var(--accent); color:var(--bg);
+  padding:10px 22px; border-radius:30px;
+  font-size:12px; font-weight:700; z-index:999;
+  white-space:nowrap; box-shadow:0 4px 20px rgba(52,232,168,.35);
+  pointer-events:none; opacity:0; transition:opacity 0.2s;
+}
+.toast.show { opacity:1; }
+
+.spinner {
+  display:flex; align-items:center; justify-content:center;
+  padding:40px; color:var(--muted); font-size:12px; gap:10px;
+}
+
+/* ── EMPTY STATE ── */
+.empty { text-align:center; padding:40px 20px; }
+.empty-icon { font-size:36px; margin-bottom:12px; }
+.empty-text { color:var(--muted); font-size:13px; margin-bottom:20px; }
+
+/* ── IMC BOX ── */
+.imc-box {
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--surf2); border-radius:10px; padding:10px 14px;
+  border-left:3px solid var(--gold); margin:10px 0 14px;
+}
+.imc-val { font-family:'DM Serif Display',serif; font-size:26px; color:var(--gold); }
+.imc-info { text-align:right; font-size:11px; color:var(--muted); line-height:1.6; }
+.imc-info strong { color:var(--gold); display:block; font-size:13px; }
+
+@media (min-width:600px) {
+  .spark-grid { grid-template-columns:repeat(4,1fr); }
+  .metric-grid { grid-template-columns:repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="logo">corpo<em>metrics</em></div>
+  <div style="font-size:11px;color:var(--muted)" id="sync-status"></div>
+</div>
+
+<!-- VIEWS -->
+<div class="content">
+  <div id="view-setup"  class="view" style="display:none"></div>
+  <div id="view-dash"   class="view" style="display:none"></div>
+  <div id="view-add"    class="view" style="display:none"></div>
+  <div id="view-hist"   class="view" style="display:none"></div>
+</div>
+
+<!-- BOTTOM TABS -->
+<div class="tabs">
+  <button class="tab" data-view="dash"  onclick="switchView('dash')">
+    <span class="tab-icon">📊</span>Dashboard
+  </button>
+  <button class="tab" data-view="add"   onclick="switchView('add')">
+    <span class="tab-icon">➕</span>Medição
+  </button>
+  <button class="tab" data-view="hist"  onclick="switchView('hist')">
+    <span class="tab-icon">📋</span>Histórico
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const LS_URL  = "cm_script_url";
+const LS_DATA = "cm_entries_cache";
+let   SCRIPT_URL = localStorage.getItem(LS_URL) || "";
+let   entries    = [];
+let   editDate   = null;
+let   currentView = "dash";
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const bmi      = kg  => (kg / (1.82 * 1.82)).toFixed(1);
+const kgFrom   = (pct, w) => ((pct / 100) * w).toFixed(1);
+const fmt      = (n, d=1) => Number(n).toFixed(d);
+const parseNum = v  => parseFloat(String(v).replace(",","."));
+const fmtDate  = iso => { const [y,m,d]=iso.split("-"); return `${d}/${m}/${y}`; };
+const delta    = (a,b) => b==null ? null : { v: Math.abs(a-b).toFixed(1), dir: a<b?"down":a>b?"up":"flat" };
+
+function deltaHTML(d, invert=false) {
+  if (!d) return "";
+  const good = invert ? d.dir==="down" : d.dir==="up";
+  const cls  = d.dir==="flat" ? "delta-flat" : good ? "delta-good" : "delta-bad";
+  const arr  = d.dir==="up" ? "▲" : d.dir==="down" ? "▼" : "—";
+  return `<span class="delta-badge ${cls}">${arr} ${d.v}</span>`;
+}
+
+function tagHTML(ok, okLabel, badLabel, color) {
+  const bg  = ok ? `rgba(${hexRgb(color)},.14)` : "rgba(245,108,108,.14)";
+  const col = ok ? color : "var(--red)";
+  return `<span class="tag" style="background:${bg};color:${col}">${ok ? okLabel : badLabel}</span>`;
+}
+
+function hexRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+function showToast(msg, dur=2400) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), dur);
+}
+
+function sorted() {
+  return [...entries].sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// ── PERSISTENCE (cache + sheets) ─────────────────────────────────────────────
+function cacheEntries(list) {
+  try { localStorage.setItem(LS_DATA, JSON.stringify(list)); } catch {}
+}
+
+function loadCache() {
+  try { const r = localStorage.getItem(LS_DATA); if (r) return JSON.parse(r); } catch {}
+  return [];
+}
+
+async function apiCall(params) {
+  if (!SCRIPT_URL) return null;
+  const url = SCRIPT_URL + "?" + new URLSearchParams(params).toString();
+  try {
+    const res  = await fetch(url, { redirect: "follow" });
+    const json = await res.json();
+    return json;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function syncFromSheets() {
+  document.getElementById("sync-status").textContent = "⟳ a sincronizar...";
+  const res = await apiCall({ action: "getAll" });
+  if (res && res.ok) {
+    entries = res.entries;
+    cacheEntries(entries);
+    document.getElementById("sync-status").textContent = "✓ sincronizado";
+    setTimeout(() => document.getElementById("sync-status").textContent = "", 2000);
+    return true;
+  }
+  document.getElementById("sync-status").textContent = "⚠️ offline";
+  return false;
+}
+
+async function saveEntry(entry) {
+  // optimistic update
+  const existing = entries.findIndex(e => e.date === entry.date);
+  if (existing >= 0) entries[existing] = entry;
+  else entries.push(entry);
+  cacheEntries(entries);
+
+  const res = await apiCall({ action: "save", ...entry });
+  if (res && res.ok) {
+    showToast("✓ Guardado no Google Sheets!");
+  } else {
+    showToast("⚠️ Guardado localmente (sem ligação)");
+  }
+}
+
+async function deleteEntry(date) {
+  entries = entries.filter(e => e.date !== date);
+  cacheEntries(entries);
+
+  const res = await apiCall({ action: "delete", date });
+  if (res && res.ok) showToast("Apagado");
+  else showToast("⚠️ Apagado localmente");
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────────────────────
+function switchView(v) {
+  document.querySelectorAll(".view").forEach(el => el.style.display = "none");
+  document.querySelectorAll(".tab").forEach(el => el.classList.toggle("active", el.dataset.view === v));
+  currentView = v;
+  const el = document.getElementById("view-" + v);
+  el.style.display = "block";
+  renderView(v);
+  window.scrollTo({ top: 0 });
+}
+
+function renderView(v) {
+  if (v === "setup") renderSetup();
+  if (v === "dash")  renderDash();
+  if (v === "add")   renderAdd();
+  if (v === "hist")  renderHist();
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────────────────
+function renderSetup() {
+  document.getElementById("view-setup").innerHTML = `
+    <div class="card setup-card">
+      <h2>⚙️ Configuração</h2>
+      <p>Cole aqui o URL do seu Google Apps Script.<br>Veja as instruções no guia de instalação.</p>
+      <input class="setup-url-input" id="url-input" type="url"
+        placeholder="https://script.google.com/macros/s/..."
+        value="${SCRIPT_URL}"/>
+      <button class="btn-primary" onclick="saveUrl()">Guardar e Testar</button>
+      <button class="btn-ghost" onclick="switchView('dash')">Cancelar</button>
+      <div style="margin-top:16px;font-size:10px;color:var(--muted);line-height:1.8">
+        Os dados ficam guardados no seu próprio Google Sheets.<br>
+        Nunca passam por servidores externos.
+      </div>
+    </div>`;
+}
+
+async function saveUrl() {
+  const url = document.getElementById("url-input").value.trim();
+  if (!url.startsWith("https://script.google.com")) {
+    showToast("⚠️ URL inválido"); return;
+  }
+  SCRIPT_URL = url;
+  localStorage.setItem(LS_URL, url);
+  showToast("⟳ A testar ligação...", 3000);
+  const ok = await syncFromSheets();
+  if (ok) {
+    showToast("✓ Ligação bem sucedida!");
+    setTimeout(() => switchView("dash"), 800);
+  } else {
+    showToast("⚠️ Não foi possível ligar. Verifique o URL.");
+  }
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDash() {
+  const s = sorted();
+  const el = document.getElementById("view-dash");
+
+  if (!SCRIPT_URL) {
+    el.innerHTML = `
+      <div class="card setup-card">
+        <div class="empty-icon">🔗</div>
+        <h2 style="font-family:'DM Serif Display',serif;color:var(--accent);margin-bottom:8px">Bem-vindo!</h2>
+        <p style="color:var(--muted);font-size:12px;line-height:1.8;margin-bottom:20px">
+          Configure o Google Sheets para guardar os seus dados de forma permanente.
+        </p>
+        <button class="btn-primary" onclick="switchView('setup');renderSetup()">⚙️ Configurar agora</button>
+      </div>`;
+    return;
+  }
+
+  if (s.length === 0) {
+    el.innerHTML = `
+      <div class="card">
+        <div class="empty">
+          <div class="empty-icon">📊</div>
+          <div class="empty-text">Sem dados ainda.<br>Adicione a primeira medição!</div>
+          <button class="btn-primary" style="width:auto;padding:12px 24px;display:inline-block" onclick="switchView('add')">+ Adicionar</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const latest = s[s.length - 1];
+  const prev   = s[s.length - 2];
+  const bmiVal = bmi(latest.weight);
+  const bmiColor = bmiVal < 25 ? "var(--accent)" : bmiVal < 30 ? "var(--gold)" : "var(--red)";
+  const bmiLabel = bmiVal < 18.5 ? "Baixo peso" : bmiVal < 25 ? "Normal" : bmiVal < 30 ? "Pré-obesidade" : "Obesidade";
+  const wD = delta(latest.weight, prev?.weight);
+  const fD = delta(latest.fat,    prev?.fat);
+  const tD = delta(latest.tbw,    prev?.tbw);
+  const mD = delta(latest.mus,    prev?.mus);
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div>
+        <span style="font-size:10px;color:var(--muted);letter-spacing:.13em;text-transform:uppercase">Última medição</span>
+        <div style="font-family:'DM Serif Display',serif;font-size:20px">${fmtDate(latest.date)}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:var(--muted);line-height:1.7">
+        Masculino · 50 anos · 1,82m<br>
+        <span style="color:var(--gold)">${s.length} medição${s.length!==1?"ões":""}</span>
+      </div>
+    </div>
+
+    <!-- WEIGHT CARD -->
+    <div class="card">
+      <span class="sec-label">Peso</span>
+      <div class="weight-hero">
+        ${latest.weight}<span class="weight-unit">kg</span>
+        ${deltaHTML(wD, true)}
+      </div>
+      <div class="imc-box">
+        <div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">IMC</div>
+          <div class="imc-val">${bmiVal}</div>
+        </div>
+        <div class="imc-info"><strong>${bmiLabel}</strong>Normal: 18,5–24,9<br>Ideal: ~75–82 kg</div>
+      </div>
+      <div class="derived-grid">
+        ${[
+          { l:"Gordura", v:kgFrom(latest.fat,latest.weight), c:"var(--red)" },
+          { l:"Água",    v:kgFrom(latest.tbw,latest.weight), c:"var(--blue)" },
+          { l:"Músculo", v:kgFrom(latest.mus,latest.weight), c:"var(--accent)" },
+        ].map(({l,v,c}) => `
+          <div class="derived-item" style="border-color:${c}">
+            <div class="derived-val" style="color:${c}">${v}<span class="derived-unit"> kg</span></div>
+            <div class="derived-lbl">${l}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <!-- COMPOSITION -->
+    <div class="card">
+      <span class="sec-label">Composição Corporal</span>
+      ${[
+        { l:"Gordura", pct:latest.fat, d:fD, c:"var(--red)",    inv:true,  ref:"11–21%", max:40 },
+        { l:"Músculo", pct:latest.mus, d:mD, c:"var(--accent)", inv:false, ref:"35–44%", max:44 },
+        { l:"Água",    pct:latest.tbw, d:tD, c:"var(--blue)",   inv:false, ref:"50–65%", max:65 },
+      ].map(({l,pct,d,c,inv,ref,max}) => `
+        <div class="comp-row">
+          <div class="comp-top">
+            <div class="comp-dot-label">
+              <div class="comp-dot" style="background:${c}"></div>${l}
+            </div>
+            <div>
+              <span class="comp-pct" style="color:${c}">${fmt(pct)}%</span>
+              ${deltaHTML(d,inv)}
+            </div>
+          </div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min((pct/max)*100,100)}%;background:${c}"></div></div>
+          <div class="comp-ref">Ideal: ${ref}</div>
+        </div>`).join("")}
+    </div>
+
+    <!-- METRIC CARDS -->
+    <div class="metric-grid">
+      ${[
+        { icon:"🔥", title:"Gordura", val:latest.fat, d:fD, c:"var(--red)",    cHex:"#f56c6c", kgv:kgFrom(latest.fat,latest.weight), ref:"11–21%", max:40, inv:true,  ok:latest.fat<=21 },
+        { icon:"💧", title:"Água",    val:latest.tbw, d:tD, c:"var(--blue)",   cHex:"#3b9ef7", kgv:kgFrom(latest.tbw,latest.weight), ref:"50–65%", max:65, inv:false, ok:latest.tbw>=50&&latest.tbw<=65 },
+        { icon:"💪", title:"Músculo", val:latest.mus, d:mD, c:"var(--accent)", cHex:"#34e8a8", kgv:kgFrom(latest.mus,latest.weight), ref:"35–44%", max:44, inv:false, ok:latest.mus>=35 },
+      ].map(({icon,title,val,d,c,cHex,kgv,ref,max,inv,ok}) => `
+        <div class="metric-card" style="border-top-color:${c}">
+          <div class="metric-icon">${icon}</div>
+          <div class="metric-title">${title}</div>
+          <div class="metric-val" style="color:${c}">${fmt(val)}<span class="metric-unit">%</span></div>
+          <div class="metric-kg">≈ <strong>${kgv} kg</strong></div>
+          <div class="metric-ref">Ref: ${ref}</div>
+          <div class="bar-wrap" style="margin-top:8px"><div class="bar-fill" style="width:${Math.min((val/max)*100,100)}%;background:${c}"></div></div>
+          ${tagHTML(ok, "Normal", inv?"Acima":"Abaixo", cHex)}
+        </div>`).join("")}
+    </div>`;
+
+  // Sparklines
+  if (s.length >= 2) {
+    html += `<div class="card"><span class="sec-label">📉 Tendência</span><div class="spark-grid">`;
+    [
+      { label:"Peso (kg)", data:s.map(e=>e.weight), c:"#f5c842" },
+      { label:"Gordura %", data:s.map(e=>e.fat),    c:"#f56c6c" },
+      { label:"Água %",    data:s.map(e=>e.tbw),    c:"#3b9ef7" },
+      { label:"Músculo %", data:s.map(e=>e.mus),    c:"#34e8a8" },
+    ].forEach(({label,data,c}) => {
+      html += `<div>
+        <div class="spark-label">${label}</div>
+        ${sparklineSVG(data, c, 160, 44)}
+        <div class="spark-vals"><span>${fmt(data[0])}</span><strong style="color:var(--text)">${fmt(data[data.length-1])}</strong></div>
+        <div class="spark-dates"><span>${fmtDate(s[0].date)}</span><span>${fmtDate(s[s.length-1].date)}</span></div>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // Evolution summary
+    const first = s[0], last = s[s.length-1];
+    const days = Math.round((new Date(last.date)-new Date(first.date))/86400000);
+    html += `<div class="card"><span class="sec-label">📊 Evolução total (${days} dias)</span><div class="evo-grid">`;
+    [
+      {l:"Peso",    from:first.weight,to:last.weight,u:"kg",inv:true},
+      {l:"Gordura", from:first.fat,   to:last.fat,   u:"%", inv:true},
+      {l:"Água",    from:first.tbw,   to:last.tbw,   u:"%", inv:false},
+      {l:"Músculo", from:first.mus,   to:last.mus,   u:"%", inv:false},
+    ].forEach(({l,from,to,u,inv}) => {
+      const diff  = to - from;
+      const good  = inv ? diff < 0 : diff > 0;
+      const color = diff===0 ? "var(--muted)" : good ? "var(--accent)" : "var(--red)";
+      const arrow = diff>0?"▲":diff<0?"▼":"—";
+      html += `<div class="evo-item">
+        <div class="evo-lbl">${l}</div>
+        <div class="evo-val" style="color:${color}">${arrow} ${fmt(Math.abs(diff))}<span style="font-size:11px;color:var(--muted)">${u}</span></div>
+        <div class="evo-from">${fmt(from)}${u} → ${fmt(to)}${u}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ── ADD FORM ──────────────────────────────────────────────────────────────────
+function renderAdd() {
+  const today = new Date().toISOString().slice(0,10);
+  let f = { date: today, weight:"", fat:"", tbw:"", mus:"" };
+
+  if (editDate) {
+    const e = entries.find(x => x.date === editDate);
+    if (e) f = { date:e.date, weight:String(e.weight), fat:String(e.fat), tbw:String(e.tbw), mus:String(e.mus) };
+  }
+
+  document.getElementById("view-add").innerHTML = `
+    <div class="card" style="max-width:460px;margin:0 auto">
+      <span class="sec-label">${editDate ? "✏️ Editar medição" : "➕ Nova medição"}</span>
+      <div class="field full">
+        <label>Data</label>
+        <input type="date" id="f-date" value="${f.date}"/>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Peso (kg)</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-weight" placeholder="ex: 96.3" value="${f.weight}"/></div>
+        <div class="field"><label>Gordura %</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-fat" placeholder="ex: 29.2" value="${f.fat}"/></div>
+        <div class="field"><label>Água % (TBW)</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-tbw" placeholder="ex: 53.6" value="${f.tbw}"/></div>
+        <div class="field"><label>Músculo %</label><input type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" id="f-mus" placeholder="ex: 30.0" value="${f.mus}"/></div>
+      </div>
+      <button class="btn-primary" onclick="submitForm()">${editDate ? "Guardar alterações" : "Guardar medição"}</button>
+      <button class="btn-ghost" onclick="cancelAdd()">Cancelar</button>
+      <div style="margin-top:12px;font-size:10px;color:var(--muted);line-height:1.8">
+        Aceita <strong style="color:var(--text)">.</strong> ou <strong style="color:var(--text)">,</strong> como decimal.
+      </div>
+    </div>`;
+}
+
+async function submitForm() {
+  const date   = document.getElementById("f-date").value;
+  const weight = parseNum(document.getElementById("f-weight").value);
+  const fat    = parseNum(document.getElementById("f-fat").value);
+  const tbw    = parseNum(document.getElementById("f-tbw").value);
+  const mus    = parseNum(document.getElementById("f-mus").value);
+
+  if (!date || isNaN(weight) || isNaN(fat) || isNaN(tbw) || isNaN(mus)) {
+    showToast("⚠️ Preencha todos os campos"); return;
+  }
+
+  await saveEntry({ date, weight, fat, tbw, mus });
+  editDate = null;
+  switchView("dash");
+}
+
+function cancelAdd() {
+  editDate = null;
+  switchView("dash");
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────────
+function renderHist() {
+  const s  = sorted();
+  const el = document.getElementById("view-hist");
+
+  if (s.length === 0) {
+    el.innerHTML = `<div class="card"><div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Sem medições ainda.</div></div></div>`;
+    return;
+  }
+
+  let rows = [...s].reverse().map((e, ri) => {
+    const idx = s.length - 1 - ri;
+    const p   = idx > 0 ? s[idx-1] : null;
+    const wD  = delta(e.weight, p?.weight);
+    const fD  = delta(e.fat,    p?.fat);
+    return `<tr>
+      <td class="date-cell">${fmtDate(e.date)}</td>
+      <td>${e.weight}${deltaHTML(wD,true)}</td>
+      <td style="color:var(--red)">${fmt(e.fat)}%${deltaHTML(fD,true)}</td>
+      <td style="color:var(--blue)">${fmt(e.tbw)}%</td>
+      <td style="color:var(--accent)">${fmt(e.mus)}%</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="act-btn" style="border:1px solid var(--border);color:var(--muted)" onclick="startEdit('${e.date}')">editar</button>
+          <button class="act-btn" style="border:1px solid rgba(245,108,108,.3);color:var(--red)" onclick="confirmDelete('${e.date}')">apagar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="card" style="overflow-x:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <span class="sec-label" style="margin:0">📋 Histórico</span>
+        <button class="btn-primary" style="width:auto;padding:8px 14px;font-size:10px;margin:0" onclick="switchView('add')">+ Nova</button>
+      </div>
+      <table class="hist-table">
+        <thead><tr>
+          <th>Data</th><th>Peso</th><th>Gord.</th><th>Água</th><th>Mús.</th><th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function startEdit(date) {
+  editDate = date;
+  switchView("add");
+}
+
+function confirmDelete(date) {
+  if (confirm(`Apagar medição de ${fmtDate(date)}?`)) {
+    deleteEntry(date).then(() => renderHist());
+  }
+}
+
+// ── SPARKLINE SVG ─────────────────────────────────────────────────────────────
+function sparklineSVG(data, color, w=160, h=44) {
+  if (data.length < 2) return "";
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 0.1;
+  const pts = data.map((v,i) => [
+    4 + (i/(data.length-1))*(w-8),
+    h-6 - ((v-min)/range)*(h-16)
+  ]);
+  const line = pts.map(p=>p.join(",")).join(" ");
+  const area = `${pts[0].join(",")} ${pts.slice(1).map(p=>p.join(",")).join(" ")} ${pts[pts.length-1][0]},${h} 4,${h}`;
+  const gid  = `sg${color.replace(/[^a-f0-9]/gi,"")}`;
+  return `<svg width="${w}" height="${h}" style="overflow:visible">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${area}" fill="url(#${gid})"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="4" fill="${color}"/>
+  </svg>`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function init() {
+  // load cache immediately for instant render
+  entries = loadCache();
+
+  // show setup if no URL configured
+  if (!SCRIPT_URL) {
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById("view-setup").style.display = "block";
+    renderSetup();
+    return;
+  }
+
+  document.querySelector('.tabs').style.display = 'flex';
+  switchView("dash");
+
+  // sync from sheets in background
+  const ok = await syncFromSheets();
+  if (ok) renderView(currentView);
+}
+
+init();
+</script>
+</body>
+</html>
