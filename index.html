@@ -284,17 +284,12 @@ const parseNum = v  => parseFloat(String(v).replace(",","."));
 const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const fmtDate = val => {
   if (!val) return "—";
-  let d;
-  if (typeof val === "object" || (typeof val === "string" && val.includes("GMT"))) {
-    d = new Date(val);
-  } else {
-    const s = String(val).trim();
-    const parts = s.split("-");
-    if (parts.length === 3) d = new Date(parts[0], parts[1]-1, parts[2]);
-    else d = new Date(s);
-  }
-  if (isNaN(d)) return String(val);
-  return `${String(d.getDate()).padStart(2,"0")}/${MONTHS[d.getMonth()]}/${d.getFullYear()}`;
+  const s = normalizeForSort(val);
+  if (!s || s.length < 10) return String(val);
+  const parts = s.split("-");
+  if (parts.length !== 3) return s;
+  const [y, m, d] = parts;
+  return `${d}/${MONTHS[parseInt(m,10)-1]}/${y}`;
 };
 const delta    = (a,b) => b==null ? null : { v: Math.abs(a-b).toFixed(1), dir: a<b?"down":a>b?"up":"flat" };
 
@@ -327,15 +322,14 @@ function showToast(msg, dur=2400) {
 
 function normalizeForSort(val) {
   if (!val) return "";
-  if (typeof val === "object") {
-    // Date object from Google Sheets
+  if (typeof val === "object" || (typeof val === "string" && (val.includes("GMT") || val.includes("T")))) {
     const d = new Date(val);
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth()+1).padStart(2,"0");
+    const day = String(d.getUTCDate()).padStart(2,"0");
+    return y + "-" + m + "-" + day;
   }
-  return String(val).trim();
+  return String(val).trim().substring(0,10);
 }
 
 function sorted() {
