@@ -281,17 +281,20 @@ const bmi      = kg  => (kg / (1.82 * 1.82)).toFixed(1);
 const kgFrom   = (pct, w) => ((pct / 100) * w).toFixed(1);
 const fmt      = (n, d=1) => Number(n).toFixed(d);
 const parseNum = v  => parseFloat(String(v).replace(",","."));
-const fmtDate  = val => {
+const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const fmtDate = val => {
   if (!val) return "—";
-  // Se vier como objeto Date do Google Sheets
-  if (typeof val === "object") {
-    const d = new Date(val);
-    return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
+  let d;
+  if (typeof val === "object" || (typeof val === "string" && val.includes("GMT"))) {
+    d = new Date(val);
+  } else {
+    const s = String(val).trim();
+    const parts = s.split("-");
+    if (parts.length === 3) d = new Date(parts[0], parts[1]-1, parts[2]);
+    else d = new Date(s);
   }
-  // String normal "YYYY-MM-DD"
-  const s = String(val).trim();
-  if (s.includes("-")) { const [y,m,d]=s.split("-"); return `${d}/${m}/${y}`; }
-  return s;
+  if (isNaN(d)) return String(val);
+  return `${String(d.getDate()).padStart(2,"0")}/${MONTHS[d.getMonth()]}/${d.getFullYear()}`;
 };
 const delta    = (a,b) => b==null ? null : { v: Math.abs(a-b).toFixed(1), dir: a<b?"down":a>b?"up":"flat" };
 
