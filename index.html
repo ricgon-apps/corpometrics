@@ -737,15 +737,16 @@ function sparklineSVG(data, color, w=160, h=44) {
   if (data.length < 2) return "";
   const min = Math.min(...data), max = Math.max(...data);
   const range = max - min || 0.1;
-  const pad = 6; // padding inside SVG so dots don't clip
+  // Generous padding so dots (r=4) never clip: 10px top/bottom, 6px left/right
+  const px = 6, pt = 10, pb = 10;
   const pts = data.map((v,i) => [
-    pad + (i/(data.length-1))*(w - pad*2),
-    (h - pad) - ((v-min)/range)*(h - pad*2)
+    px + (i/(data.length-1))*(w - px*2),
+    pt + (1 - (v-min)/range) * (h - pt - pb)
   ]);
   const line = pts.map(p=>p.join(",")).join(" ");
-  const area = `${pts[0].join(",")} ${pts.slice(1).map(p=>p.join(",")).join(" ")} ${pts[pts.length-1][0]},${h} ${pad},${h}`;
+  const area = `${pts[0].join(",")} ${pts.slice(1).map(p=>p.join(",")).join(" ")} ${pts[pts.length-1][0]},${h} ${px},${h}`;
   const gid  = `sg${color.replace(/[^a-f0-9]/gi,"")}`;
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:hidden;display:block">
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:hidden;display:block;width:100%">
     <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="${color}" stop-opacity="0.3"/>
       <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
