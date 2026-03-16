@@ -768,48 +768,24 @@ function sparklineSVG(data, color, w=160, h=44) {
 
 // ── CALORIES ─────────────────────────────────────────────────────────────────
 function renderCal() {
-  document.getElementById("view-cal").innerHTML = `
-    <div class="card">
-      <span class="sec-label">🍽️ Analisador de Calorias</span>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.8">
-        Tire ou selecione uma foto de um prato ou produto alimentar.<br>
-        A IA analisa e estima os valores nutricionais.
-      </p>
-
-      <!-- Upload area -->
-      <div id="cal-upload-area" onclick="document.getElementById('cal-input').click()"
-        style="border:2px dashed var(--border);border-radius:12px;padding:32px 20px;
-               text-align:center;cursor:pointer;transition:border-color 0.2s;margin-bottom:16px"
-        onmouseover="this.style.borderColor='var(--accent)'"
-        onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:40px;margin-bottom:10px">📷</div>
-        <div style="font-size:13px;color:var(--muted)">Toque para tirar foto ou selecionar da galeria</div>
-        <input type="file" id="cal-input" accept="image/*" capture="environment"
-          style="display:none" onchange="handleCalImage(event)"/>
-      </div>
-
-      <!-- Preview -->
-      <div id="cal-preview" style="display:none;margin-bottom:16px">
-        <img id="cal-img" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover"/>
-        <button onclick="analyzeFood()" id="cal-btn"
-          style="display:block;width:100%;padding:15px;background:var(--accent);
-                 color:var(--bg);border-radius:10px;border:none;font-size:13px;
-                 letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;
-                 font-family:'DM Mono',monospace;font-weight:700;margin-top:12px">
-          Analisar calorias
-        </button>
-        <button onclick="resetCal()"
-          style="display:block;width:100%;padding:12px;background:transparent;
-                 color:var(--muted);border-radius:10px;border:1px solid var(--border);
-                 font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
-                 cursor:pointer;font-family:'DM Mono',monospace;margin-top:8px">
-          Escolher outra foto
-        </button>
-      </div>
-
-      <!-- Result -->
-      <div id="cal-result" style="display:none"></div>
-    </div>`;
+  const el = document.getElementById("view-cal");
+  el.innerHTML = '<div class="card" id="cal-card">'
+    + '<span class="sec-label">🍽️ Analisador de Calorias</span>'
+    + '<p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.8">'
+    + 'Tire ou selecione uma foto de um prato ou produto.<br>A IA estima os valores nutricionais.</p>'
+    + '<div id="cal-upload-area" onclick="document.getElementById(\'cal-input\').click()" '
+    + 'style="border:2px dashed var(--border);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:16px">'
+    + '<div style="font-size:40px;margin-bottom:10px">📷</div>'
+    + '<div style="font-size:13px;color:var(--muted)">Toque para tirar foto ou selecionar da galeria</div>'
+    + '<input type="file" id="cal-input" accept="image/*" capture="environment" style="display:none" onchange="handleCalImage(event)"/>'
+    + '</div>'
+    + '<div id="cal-preview" style="display:none;margin-bottom:16px">'
+    + '<img id="cal-img" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover"/>'
+    + '<button onclick="analyzeFood()" id="cal-btn" style="display:block;width:100%;padding:15px;background:var(--accent);color:var(--bg);border-radius:10px;border:none;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:inherit;font-weight:700;margin-top:12px">Analisar calorias</button>'
+    + '<button onclick="resetCal()" style="display:block;width:100%;padding:12px;background:transparent;color:var(--muted);border-radius:10px;border:1px solid var(--border);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:inherit;margin-top:8px">Escolher outra foto</button>'
+    + '</div>'
+    + '<div id="cal-result" style="display:none"></div>'
+    + '</div>';
 }
 
 let calImageB64 = null;
@@ -818,7 +794,7 @@ function handleCalImage(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = function(e) {
     const dataUrl = e.target.result;
     calImageB64 = dataUrl.split(',')[1];
     document.getElementById('cal-img').src = dataUrl;
@@ -837,6 +813,62 @@ function resetCal() {
   document.getElementById('cal-input').value = '';
 }
 
+function buildResult(info) {
+  const clsColor = info.classificacao === 'saudável' ? 'var(--accent)'
+                 : info.classificacao === 'moderado'  ? 'var(--gold)'
+                 : 'var(--red)';
+  const clsLabel = info.classificacao === 'saudável' ? '✅ Saudável'
+                 : info.classificacao === 'moderado'  ? '⚠️ Moderado'
+                 : '🔴 Calórico';
+
+  const macros = [
+    {l:'Proteínas',    v:info.proteinas,    c:'var(--accent)'},
+    {l:'Carboidratos', v:info.carboidratos, c:'var(--blue)'},
+    {l:'Gorduras',     v:info.gorduras,     c:'var(--red)'},
+    {l:'Fibra',        v:info.fibra,        c:'var(--gold)'},
+  ];
+
+  let macroHTML = '';
+  macros.forEach(function(m) {
+    macroHTML += '<div style="background:var(--surf2);border-radius:8px;padding:10px 8px;text-align:center;border-top:2px solid ' + m.c + '">'
+      + '<div style="font-family:\'DM Serif Display\',serif;font-size:20px;color:' + m.c + '">' + m.v + '</div>'
+      + '<div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px">' + m.l + '</div>'
+      + '</div>';
+  });
+
+  let altHTML = '';
+  if (info.alternativas && info.alternativas.length) {
+    info.alternativas.forEach(function(a) {
+      altHTML += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)">'
+        + '<span style="color:var(--accent);font-size:14px">→</span>' + a + '</div>';
+    });
+  }
+
+  let notaHTML = '';
+  if (info.nota) {
+    notaHTML = '<div style="background:var(--surf2);border-radius:8px;padding:12px 14px;font-size:11px;color:var(--muted);line-height:1.7;font-style:italic;margin-bottom:14px">"' + info.nota + '"</div>';
+  }
+
+  return '<div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">'
+    + '<div><div style="font-family:\'DM Serif Display\',serif;font-size:20px;color:var(--text)">' + info.nome + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-top:2px">Porção estimada: ' + info.porcao + '</div></div>'
+    + '<span style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;background:' + clsColor + '22;color:' + clsColor + '">' + clsLabel + '</span>'
+    + '</div>'
+    + '<div style="background:var(--surf2);border-radius:12px;padding:16px 20px;text-align:center;margin-bottom:14px;border-left:4px solid var(--gold)">'
+    + '<div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Calorias totais</div>'
+    + '<div style="font-family:\'DM Serif Display\',serif;font-size:52px;color:var(--gold);line-height:1">' + info.calorias + '</div>'
+    + '<div style="font-size:12px;color:var(--muted)">kcal</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">' + macroHTML + '</div>'
+    + '<div style="margin-bottom:14px">'
+    + '<div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">💡 Alternativas mais saudáveis</div>'
+    + altHTML + '</div>'
+    + notaHTML
+    + '<button onclick="resetCal()" style="display:block;width:100%;padding:13px;background:transparent;color:var(--muted);border-radius:10px;border:1px solid var(--border);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-family:inherit;margin-top:6px">Analisar outra foto</button>'
+    + '</div>';
+}
+
 async function analyzeFood() {
   if (!calImageB64) return;
 
@@ -846,6 +878,8 @@ async function analyzeFood() {
 
   const resultEl = document.getElementById('cal-result');
   resultEl.style.display = 'none';
+
+  const prompt = 'Analisa esta imagem de comida e responde APENAS em JSON valido, sem texto adicional, sem markdown. Usa este formato exacto: {"nome":"nome do prato","porcao":"estimativa em gramas","calorias":000,"proteinas":00,"carboidratos":00,"gorduras":00,"fibra":00,"classificacao":"saudavel ou moderado ou calorico","alternativas":["alt1","alt2","alt3"],"nota":"observacao curta em portugues"}';
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -857,116 +891,34 @@ async function analyzeFood() {
         messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: 'image/jpeg', data: calImageB64 }
-            },
-            {
-              type: 'text',
-              text: \`Analisa esta imagem de comida e responde APENAS em JSON válido, sem texto adicional, sem markdown, sem backticks. Usa este formato exacto:
-{
-  "nome": "nome do prato ou produto",
-  "porcao": "estimativa da porção em gramas ou unidade",
-  "calorias": 000,
-  "proteinas": 00,
-  "carboidratos": 00,
-  "gorduras": 00,
-  "fibra": 00,
-  "classificacao": "saudável|moderado|calórico",
-  "alternativas": ["alternativa 1 mais saudável", "alternativa 2", "alternativa 3"],
-  "nota": "observação curta sobre o prato em português"
-}\`
-            }
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: calImageB64 } },
+            { type: 'text', text: prompt }
           ]
         }]
       })
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || '';
+
+    if (data.error) {
+      throw new Error(data.error.message || 'Erro na API');
+    }
+
+    const text = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : '';
+    const clean = text.replace(/```json|```/g, '').trim();
 
     let info;
     try {
-      info = JSON.parse(text.replace(/\`\`\`json|\`\`\`/g, '').trim());
+      info = JSON.parse(clean);
     } catch(e) {
-      throw new Error('Não foi possível interpretar a resposta.');
+      throw new Error('Não foi possível interpretar a resposta da IA.');
     }
 
-    const clsColor = info.classificacao === 'saudável' ? 'var(--accent)'
-                   : info.classificacao === 'moderado'  ? 'var(--gold)'
-                   : 'var(--red)';
-    const clsLabel = info.classificacao === 'saudável' ? '✅ Saudável'
-                   : info.classificacao === 'moderado'  ? '⚠️ Moderado'
-                   : '🔴 Calórico';
-
-    resultEl.innerHTML = \`
-      <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <div>
-            <div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--text)">\${info.nome}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">Porção estimada: \${info.porcao}</div>
-          </div>
-          <span style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
-                       background:\${clsColor}22;color:\${clsColor}">\${clsLabel}</span>
-        </div>
-
-        <!-- Calorias destaque -->
-        <div style="background:var(--surf2);border-radius:12px;padding:16px 20px;
-                    text-align:center;margin-bottom:14px;border-left:4px solid var(--gold)">
-          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">Calorias totais</div>
-          <div style="font-family:'DM Serif Display',serif;font-size:52px;color:var(--gold);line-height:1">\${info.calorias}</div>
-          <div style="font-size:12px;color:var(--muted)">kcal</div>
-        </div>
-
-        <!-- Macros grid -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
-          \${[
-            {l:'Proteínas', v:info.proteinas, u:'g', c:'var(--accent)'},
-            {l:'Carboidratos', v:info.carboidratos, u:'g', c:'var(--blue)'},
-            {l:'Gorduras', v:info.gorduras, u:'g', c:'var(--red)'},
-            {l:'Fibra', v:info.fibra, u:'g', c:'var(--gold)'},
-          ].map(m => \`
-            <div style="background:var(--surf2);border-radius:8px;padding:10px 8px;
-                        text-align:center;border-top:2px solid \${m.c}">
-              <div style="font-family:'DM Serif Display',serif;font-size:20px;color:\${m.c}">\${m.v}</div>
-              <div style="font-size:9px;color:var(--muted);text-transform:uppercase;
-                          letter-spacing:.06em;margin-top:2px">\${m.l}</div>
-            </div>\`).join('')}
-        </div>
-
-        <!-- Alternativas -->
-        <div style="margin-bottom:14px">
-          <div style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">💡 Alternativas mais saudáveis</div>
-          \${info.alternativas.map(a => \`
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;
-                        border-bottom:1px solid var(--border);font-size:12px;color:var(--text)">
-              <span style="color:var(--accent);font-size:14px">→</span>\${a}
-            </div>\`).join('')}
-        </div>
-
-        <!-- Nota -->
-        \${info.nota ? \`<div style="background:var(--surf2);border-radius:8px;padding:12px 14px;
-          font-size:11px;color:var(--muted);line-height:1.7;font-style:italic">
-          "\${info.nota}"
-        </div>\` : ''}
-
-        <button onclick="resetCal()"
-          style="display:block;width:100%;padding:13px;background:transparent;
-                 color:var(--muted);border-radius:10px;border:1px solid var(--border);
-                 font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
-                 cursor:pointer;font-family:'DM Mono',monospace;margin-top:14px">
-          Analisar outra foto
-        </button>
-      </div>\`;
-
+    resultEl.innerHTML = buildResult(info);
     resultEl.style.display = 'block';
 
   } catch(err) {
-    resultEl.innerHTML = \`<div style="color:var(--red);font-size:12px;padding:12px;
-      background:rgba(245,108,108,.1);border-radius:8px;margin-top:8px">
-      ⚠️ Erro: \${err.message}
-    </div>\`;
+    resultEl.innerHTML = '<div style="color:var(--red);font-size:12px;padding:14px;background:rgba(245,108,108,.1);border-radius:8px;margin-top:8px">⚠️ ' + err.message + '</div>';
     resultEl.style.display = 'block';
   }
 
