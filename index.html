@@ -883,9 +883,13 @@ async function analyzeFood() {
   try {
     if (!SCRIPT_URL) throw new Error('Apps Script não configurado. Vá às definições e configure o URL.');
 
-    // Envia a imagem pelo Apps Script — a chave API fica segura no servidor
-    const url = SCRIPT_URL + '?action=analyzeFood&mediaType=image%2Fjpeg&imageBase64=' + encodeURIComponent(calImageB64);
-    const response = await fetch(url, { redirect: 'follow' });
+    // Envia a imagem pelo Apps Script via POST — evita limite de tamanho do URL
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'action=analyzeFood&mediaType=image%2Fjpeg&imageBase64=' + encodeURIComponent(calImageB64)
+    });
     const data = await response.json();
 
     if (data.error) throw new Error(data.error);
