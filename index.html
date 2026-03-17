@@ -795,14 +795,38 @@ let calImageB64 = null;
 function handleCalImage(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  const img = new Image();
   const reader = new FileReader();
+
   reader.onload = function(e) {
-    const dataUrl = e.target.result;
-    calImageB64 = dataUrl.split(',')[1];
-    document.getElementById('cal-img').src = dataUrl;
-    document.getElementById('cal-preview').style.display = 'block';
-    document.getElementById('cal-upload-area').style.display = 'none';
-    document.getElementById('cal-result').style.display = 'none';
+    img.onload = function() {
+      // Redimensiona para máximo 1200px e comprime para <4MB
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      // Comprime com qualidade 0.8, reduz se ainda for grande
+      let quality = 0.82;
+      let dataUrl = canvas.toDataURL('image/jpeg', quality);
+      while (dataUrl.length > 4 * 1024 * 1024 && quality > 0.3) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL('image/jpeg', quality);
+      }
+
+      calImageB64 = dataUrl.split(',')[1];
+      document.getElementById('cal-img').src = dataUrl;
+      document.getElementById('cal-preview').style.display = 'block';
+      document.getElementById('cal-upload-area').style.display = 'none';
+      document.getElementById('cal-result').style.display = 'none';
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
