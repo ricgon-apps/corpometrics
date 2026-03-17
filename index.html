@@ -236,6 +236,46 @@ body {
 .imc-info { text-align:right; font-size:11px; color:var(--muted); line-height:1.6; }
 .imc-info strong { color:var(--gold); display:block; font-size:13px; }
 
+/* ── CHART MODAL ── */
+.chart-modal-overlay {
+  position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.85);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+  animation: fadeIn 0.18s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.chart-modal {
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:24px 20px 20px;
+  width:100%; max-width:560px;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from{transform:translateY(24px);opacity:0} to{transform:translateY(0);opacity:1} }
+.chart-modal-title {
+  font-size:11px; letter-spacing:0.12em; color:var(--muted);
+  text-transform:uppercase; margin-bottom:16px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.chart-modal-close {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--surf2); border:1px solid var(--border);
+  color:var(--muted); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.chart-modal-stats {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px;
+}
+.chart-modal-stat {
+  background:var(--surf2); border-radius:8px; padding:10px 12px; text-align:center;
+}
+.chart-modal-stat .sv { font-family:'DM Serif Display',serif; font-size:20px; line-height:1; }
+.chart-modal-stat .sl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:3px; }
+.spark-item { cursor:pointer; transition:opacity 0.15s; }
+.spark-item:hover { opacity:0.75; }
+
 @media (min-width:600px) {
   .spark-grid { grid-template-columns:repeat(4,1fr); }
   .metric-grid { grid-template-columns:repeat(3,1fr); }
@@ -598,7 +638,8 @@ function renderDash() {
       { label:"Água %",    data:s.map(e=>e.tbw),    c:"#3b9ef7" },
       { label:"Músculo %", data:s.map(e=>e.mus),    c:"#34e8a8" },
     ].forEach(({label,data,c}) => {
-      html += `<div>
+      const dKey = encodeURIComponent(JSON.stringify({label,data,c,dates:s.map(e=>e.date)}));
+      html += `<div class="spark-item" onclick="openChartModal(this)" data-chart="${dKey}">
         <div class="spark-label">${label}</div>
         <div class="spark-chart">${sparklineSVG(data, c, 160, 44)}</div>
         <div class="spark-vals"><span>${fmt(data[0])}</span><strong style="color:var(--text)">${fmt(data[data.length-1])}</strong></div>
@@ -930,6 +971,92 @@ async function analyzeFood() {
 
   btn.disabled = false;
   btn.textContent = 'Analisar calorias';
+}
+
+// ── CHART MODAL ──────────────────────────────────────────────────────────────
+function openChartModal(el) {
+  const raw = JSON.parse(decodeURIComponent(el.dataset.chart));
+  const { label, data, c, dates } = raw;
+
+  const min   = Math.min(...data);
+  const max   = Math.max(...data);
+  const avg   = (data.reduce((a,b)=>a+b,0)/data.length);
+  const last  = data[data.length-1];
+  const first = data[0];
+  const diff  = last - first;
+  const trend = diff < 0 ? '▼' : diff > 0 ? '▲' : '—';
+  const tColor = diff === 0 ? 'var(--muted)' : (label.includes('Gordura') || label.includes('Peso'))
+    ? (diff < 0 ? 'var(--accent)' : 'var(--red)')
+    : (diff > 0 ? 'var(--accent)' : 'var(--red)');
+
+  // Build detailed sparkline with dots for each point
+  const W = 320, H = 120;
+  const range = max - min || 0.1;
+  const px = 10, pt = 14, pb = 14;
+  const pts = data.map((v,i) => [
+    px + (i/(data.length-1))*(W-px*2),
+    pt + (1-(v-min)/range)*(H-pt-pb)
+  ]);
+  const line = pts.map(p=>p.join(',')).join(' ');
+  const area = pts[0].join(',') + ' ' + pts.slice(1).map(p=>p.join(',')).join(' ') + ' ' + pts[pts.length-1][0] + ',' + H + ' ' + px + ',' + H;
+  const gid  = 'mg' + c.replace(/[^a-f0-9]/gi,'');
+
+  let dotsHTML = '';
+  pts.forEach(function(p, i) {
+    const isFirst = i === 0, isLast = i === pts.length-1;
+    const r = isFirst || isLast ? 5 : 3;
+    const fill = isLast ? c : (isFirst ? c + '88' : c + '55');
+    const val = data[i];
+    dotsHTML += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + r + '" fill="' + fill + '"/>';
+    // Label first, last and min/max
+    if (isFirst || isLast || val === min || val === max) {
+      const anchor = p[0] < 30 ? 'start' : p[0] > W-30 ? 'end' : 'middle';
+      const dy = p[1] < 20 ? 14 : -8;
+      dotsHTML += '<text x="' + p[0] + '" y="' + (p[1]+dy) + '" text-anchor="' + anchor + '" font-size="9" fill="' + c + '" >' + Number(val).toFixed(1) + '</text>';
+    }
+  });
+
+  const svgHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:hidden;display:block;width:100%">'
+    + '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0%" stop-color="' + c + '" stop-opacity="0.25"/>'
+    + '<stop offset="100%" stop-color="' + c + '" stop-opacity="0"/>'
+    + '</linearGradient></defs>'
+    + '<polygon points="' + area + '" fill="url(#' + gid + ')"/>'
+    + '<polyline points="' + line + '" fill="none" stroke="' + c + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + dotsHTML
+    + '</svg>';
+
+  const modal = document.createElement('div');
+  modal.className = 'chart-modal-overlay';
+  modal.id = 'chart-modal';
+  modal.onclick = function(e) { if (e.target === modal) closeChartModal(); };
+
+  modal.innerHTML = '<div class="chart-modal">'
+    + '<div class="chart-modal-title">'
+    + '<span>' + label + ' — ' + data.length + ' medições</span>'
+    + '<button class="chart-modal-close" onclick="closeChartModal()">✕</button>'
+    + '</div>'
+    + svgHTML
+    + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px">'
+    + '<span>' + fmtDate(dates[0]) + '</span><span>' + fmtDate(dates[dates.length-1]) + '</span>'
+    + '</div>'
+    + '<div class="chart-modal-stats">'
+    + '<div class="chart-modal-stat"><div class="sv" style="color:' + c + '">' + Number(min).toFixed(1) + '</div><div class="sl">Mínimo</div></div>'
+    + '<div class="chart-modal-stat"><div class="sv" style="color:' + c + '">' + Number(max).toFixed(1) + '</div><div class="sl">Máximo</div></div>'
+    + '<div class="chart-modal-stat"><div class="sv" style="color:' + c + '">' + Number(avg).toFixed(1) + '</div><div class="sl">Média</div></div>'
+    + '</div>'
+    + '<div style="margin-top:12px;background:var(--surf2);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
+    + '<span style="font-size:11px;color:var(--muted)">Variação total</span>'
+    + '<span style="font-family:\'DM Serif Display\',serif;font-size:20px;color:' + tColor + '">' + trend + ' ' + Math.abs(diff).toFixed(1) + '</span>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(modal);
+}
+
+function closeChartModal() {
+  const m = document.getElementById('chart-modal');
+  if (m) m.remove();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
