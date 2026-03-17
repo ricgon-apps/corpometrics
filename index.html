@@ -280,7 +280,8 @@ body {
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const LS_URL  = "cm_script_url";
 const LS_DATA = "cm_entries_cache";
-let   SCRIPT_URL = localStorage.getItem(LS_URL) || "";
+const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsh5SNEyTAnmwwcF1Vq2vfZLzS5MWT6T9bcAukmL25XB0WZUhH8CgyB9pKctNIyfFO/exec";
+let   SCRIPT_URL = localStorage.getItem(LS_URL) || DEFAULT_SCRIPT_URL;
 let   entries    = [];
 let   editDate   = null;
 let   currentView = "dash";
@@ -778,7 +779,7 @@ function renderCal() {
     + 'style="border:2px dashed var(--border);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:16px">'
     + '<div style="font-size:40px;margin-bottom:10px">📷</div>'
     + '<div style="font-size:13px;color:var(--muted)">Toque para tirar foto ou selecionar da galeria</div>'
-    + '<input type="file" id="cal-input" accept="image/*" capture="environment" style="display:none" onchange="handleCalImage(event)"/>'
+    + '<input type="file" id="cal-input" accept="image/*" style="display:none" onchange="handleCalImage(event)"/>'
     + '</div>'
     + '<div id="cal-preview" style="display:none;margin-bottom:16px">'
     + '<img id="cal-img" style="width:100%;border-radius:10px;max-height:260px;object-fit:cover"/>'
